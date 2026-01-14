@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista zakupów</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <h1>Lista zakupów</h1>
+
+  <nav>
+    <a href="#lista">Lista</a>
+    <a href="#o-aplikacji">O aplikacji</a>
+    <a href="#api">Dane z API</a>
+  </nav>
+
+  <section id="view-lista">
+    <div class="container">
+
+      <div class="form-section">
+        <h2>Dodaj produkt</h2>
+        <input type="text" id="itemInput" placeholder="Nazwa produktu" />
+        <button id="addItemBtn">Dodaj</button>
+
+        <div class="filters">
+          <button data-filter="all">Wszystkie</button>
+          <button data-filter="active">Nie kupione</button>
+          <button data-filter="purchased">Kupione</button>
+        </div>
+      </div>
+
+      <div class="list-section">
+        <h2>Produkty</h2>
+        <ul id="itemList"></ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="view-about" style="display: none;">
+    <h2>O aplikacji</h2>
+    <p>
+      Aplikacja Lista Zakupów umożliwia dodawanie, edycję, usuwanie,
+      oznaczanie oraz filtrowanie produktów. Dane zapisywane są lokalnie
+      w przeglądarce użytkownika.
+    </p>
+  </section>
+
+  <div id="view-api" style="display: none;">
+    <h2>Dane z API</h2>
+    <ul id="apiDataList"></ul>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
