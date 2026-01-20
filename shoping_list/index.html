@@ -18,7 +18,6 @@
 
   <section id="view-lista">
     <div class="container">
-
       <div class="form-section">
         <h2>Dodaj produkt</h2>
         <input type="text" id="itemInput" placeholder="Nazwa produktu" />
@@ -35,23 +34,43 @@
         <h2>Produkty</h2>
         <ul id="itemList"></ul>
       </div>
-
     </div>
   </section>
+<section id="view-about" style="display: none;">
+  <h2>O aplikacji</h2>
 
-  <section id="view-about" style="display: none;">
-    <h2>O aplikacji</h2>
-    <p>
-      Aplikacja Lista Zakupów umożliwia dodawanie, edycję, usuwanie,
-      oznaczanie oraz filtrowanie produktów. Dane zapisywane są lokalnie
-      w przeglądarce użytkownika.
-    </p>
-  </section>
+  <p>
+    Aplikacja „Lista zakupów” to aplikacja webowa umożliwiająca zarządzanie listą zakupów.
+    Użytkownik może dodawać, edytować, usuwać oraz oznaczać produkty jako kupione.
+    Dane są zapisywane lokalnie w przeglądarce.
+  </p>
 
-  <div id="view-api" style="display: none;">
-    <h2>Dane z API</h2>
+  <h3>Funkcjonalności</h3>
+  <ul>
+    <li>Dodawanie produktów do listy zakupów</li>
+    <li>Edycja nazw produktów</li>
+    <li>Usuwanie produktów</li>
+    <li>Oznaczanie produktów jako kupione</li>
+    <li>Filtrowanie produktów (wszystkie, kupione, niekupione)</li>
+    <li>Pobieranie ciekawostek z zewnętrznego API</li>
+  </ul>
+
+  <h3>Technologie</h3>
+  <ul>
+    <li>HTML</li>
+    <li>CSS</li>
+    <li>JavaScript</li>
+    <li>REST API</li>
+  </ul>
+</section>
+
+
+  <section id="view-api" style="display: none;">
+    <h2>Dane z API - ciekawostki</h2>
     <ul id="apiDataList"></ul>
-  </div>
+
+    <button id="refreshFactsBtn">Odśwież ciekawostki</button>
+  </section>
 
   <script src="js/app.js"></script>
 </body>

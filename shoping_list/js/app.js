@@ -1,18 +1,21 @@
 let currentFilter = 'all';
-const API_BASE_URL = 'https://jsonplaceholder.typicode.com';
+
+// API endpoints
+const FACT_USELESS_API = 'https://uselessfacts.jsph.pl/api/v2/facts/random?language=en';
+const TRIVIA_API = 'https://opentdb.com/api.php?amount=1';
 
 const itemInput = document.getElementById('itemInput');
 const addItemBtn = document.getElementById('addItemBtn');
 const itemList = document.getElementById('itemList');
+const refreshFactsBtn = document.getElementById('refreshFactsBtn');
+const apiDataList = document.getElementById('apiDataList');
 
 let items = JSON.parse(localStorage.getItem('items')) || [];
 
 /* ===== RENDER LISTY ===== */
 function renderItems() {
   itemList.innerHTML = '';
-
-  let filteredItems = items
-    .map((item, originalIndex) => ({ item, originalIndex }));
+  let filteredItems = items.map((item, originalIndex) => ({ item, originalIndex }));
 
   if (currentFilter === 'active') {
     filteredItems = filteredItems.filter(entry => !entry.item.purchased);
@@ -44,11 +47,11 @@ function renderItems() {
     itemList.appendChild(li);
   });
 }
+
 /* ===== CRUD ===== */
 function addItem() {
   const value = itemInput.value.trim();
   if (!value) return;
-
   items.push({ name: value, purchased: false });
   saveAndRender();
 }
@@ -88,7 +91,6 @@ function saveEdit(index, inputElement) {
   }
 }
 
-/* ===== STORAGE ===== */
 function saveAndRender() {
   localStorage.setItem('items', JSON.stringify(items));
   itemInput.value = '';
@@ -120,30 +122,43 @@ function renderRoute() {
 
 /* ===== RENDER API DATA ===== */
 async function renderApiData() {
-  const apiDataList = document.getElementById('apiDataList');
-  apiDataList.innerHTML = 'Ładowanie danych...';
+  apiDataList.innerHTML = '<li>Ładowanie danych z API...</li>';
 
   try {
-    const response = await fetch(`${API_BASE_URL}/todos?_limit=5`);
-    const todos = await response.json();
+    // 1) Random Useless Fact JSON
+    const respUseless = await fetch(FACT_USELESS_API);
+    const uselessJson = await respUseless.json();
+
+    // 2) Random Trivia Question JSON
+    const respTrivia = await fetch(TRIVIA_API);
+    const triviaJson = await respTrivia.json();
 
     apiDataList.innerHTML = '';
-    todos.forEach(todo => {
-      const li = document.createElement('li');
-      li.textContent = `${todo.id}: ${todo.title}`;
-      apiDataList.appendChild(li);
-    });
+
+    // Useless Fact
+    const li1 = document.createElement('li');
+    li1.textContent = `Fakt: ${uselessJson.text}`;
+    apiDataList.appendChild(li1);
+
+    // Trivia Question
+    if (triviaJson.results && triviaJson.results.length > 0) {
+      const t = triviaJson.results[0];
+      const li2 = document.createElement('li');
+      // Wyświetlamy pytanie i odpowiedź
+      li2.innerHTML = `Quiz: ${t.question} <br> Answer: ${t.correct_answer}`;
+      apiDataList.appendChild(li2);
+    }
+
   } catch (error) {
-    apiDataList.innerHTML = 'Błąd podczas ładowania danych.';
+    apiDataList.innerHTML = '<li>Błąd podczas pobierania danych z API.</li>';
     console.error('Błąd API:', error);
   }
 }
 
 /* ===== INIT ===== */
 addItemBtn.addEventListener('click', addItem);
+refreshFactsBtn.addEventListener('click', renderApiData);
+
 renderItems();
 renderRoute();
-// fetchUsers();
-// fetchTodos();
-
 window.addEventListener('hashchange', renderRoute);
