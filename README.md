@@ -1,4 +1,4 @@
-# Lista Zakupów — aplikacja webowa
+# Lista Zakupów - aplikacja webowa
 
 ## Opis projektu
 
