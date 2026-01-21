@@ -1,49 +1,81 @@
 let currentFilter = 'all';
 
-// API endpoints
-const FACT_USELESS_API = 'https://uselessfacts.jsph.pl/api/v2/facts/random?language=en';
-const TRIVIA_API = 'https://opentdb.com/api.php?amount=1';
+/* ===== API ENDPOINTS ===== */
+const FACT_USELESS_API =
+  'https://uselessfacts.jsph.pl/api/v2/facts/random?language=en';
+const TRIVIA_API =
+  'https://opentdb.com/api.php?amount=1';
 
+/* ===== TRYB API ===== */
+let USE_MOCK_API = false;
+
+/* ===== ELEMENTY DOM ===== */
 const itemInput = document.getElementById('itemInput');
 const addItemBtn = document.getElementById('addItemBtn');
 const itemList = document.getElementById('itemList');
 const refreshFactsBtn = document.getElementById('refreshFactsBtn');
 const apiDataList = document.getElementById('apiDataList');
+const toggleApiModeBtn = document.getElementById('toggleApiModeBtn');
 
+/* ===== DANE ===== */
 let items = JSON.parse(localStorage.getItem('items')) || [];
+
+/* ===== MOCK API ===== */
+function mockUselessFactAPI() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve({
+        text: 'Mock: Ośmiornice mają trzy serca.'
+      });
+    }, 500);
+  });
+}
+
+function mockTriviaAPI() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve({
+        results: [
+          {
+            question: 'Mock: Jaki język działa w przeglądarce?',
+            correct_answer: 'JavaScript'
+          }
+        ]
+      });
+    }, 500);
+  });
+}
 
 /* ===== RENDER LISTY ===== */
 function renderItems() {
   itemList.innerHTML = '';
-  let filteredItems = items.map((item, originalIndex) => ({ item, originalIndex }));
+
+  let filteredItems = items.map((item, index) => ({ item, index }));
 
   if (currentFilter === 'active') {
-    filteredItems = filteredItems.filter(entry => !entry.item.purchased);
+    filteredItems = filteredItems.filter(e => !e.item.purchased);
   } else if (currentFilter === 'purchased') {
-    filteredItems = filteredItems.filter(entry => entry.item.purchased);
+    filteredItems = filteredItems.filter(e => e.item.purchased);
   }
 
-  filteredItems.forEach(({ item, originalIndex }) => {
+  filteredItems.forEach(({ item, index }) => {
     const li = document.createElement('li');
     if (item.purchased) li.classList.add('purchased');
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = item.purchased;
-    checkbox.addEventListener('change', () => togglePurchased(originalIndex));
+    checkbox.addEventListener('change', () => togglePurchased(index));
 
     const span = document.createElement('span');
     span.textContent = item.name;
-    span.style.cursor = 'pointer';
-    span.addEventListener('dblclick', () => editItem(originalIndex, span));
+    span.addEventListener('dblclick', () => editItem(index, span));
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Usuń';
-    deleteBtn.addEventListener('click', () => removeItem(originalIndex));
+    deleteBtn.addEventListener('click', () => removeItem(index));
 
-    li.appendChild(checkbox);
-    li.appendChild(span);
-    li.appendChild(deleteBtn);
+    li.append(checkbox, span, deleteBtn);
     itemList.appendChild(li);
   });
 }
@@ -52,6 +84,7 @@ function renderItems() {
 function addItem() {
   const value = itemInput.value.trim();
   if (!value) return;
+
   items.push({ name: value, purchased: false });
   saveAndRender();
 }
@@ -67,9 +100,8 @@ function togglePurchased(index) {
 }
 
 /* ===== EDYCJA ===== */
-function editItem(index, spanElement) {
+function editItem(index, span) {
   const input = document.createElement('input');
-  input.type = 'text';
   input.value = items[index].name;
 
   input.addEventListener('blur', () => saveEdit(index, input));
@@ -77,14 +109,14 @@ function editItem(index, spanElement) {
     if (e.key === 'Enter') saveEdit(index, input);
   });
 
-  spanElement.replaceWith(input);
+  span.replaceWith(input);
   input.focus();
 }
 
-function saveEdit(index, inputElement) {
-  const newValue = inputElement.value.trim();
-  if (newValue) {
-    items[index].name = newValue;
+function saveEdit(index, input) {
+  const value = input.value.trim();
+  if (value) {
+    items[index].name = value;
     saveAndRender();
   } else {
     renderItems();
@@ -98,9 +130,9 @@ function saveAndRender() {
 }
 
 /* ===== FILTROWANIE ===== */
-document.querySelectorAll('.filters button').forEach(button => {
-  button.addEventListener('click', () => {
-    currentFilter = button.dataset.filter;
+document.querySelectorAll('.filters button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentFilter = btn.dataset.filter;
     renderItems();
   });
 });
@@ -108,52 +140,59 @@ document.querySelectorAll('.filters button').forEach(button => {
 /* ===== ROUTING ===== */
 function renderRoute() {
   const hash = window.location.hash || '#lista';
+
   document.getElementById('view-lista').style.display =
-    hash === '#o-aplikacji' ? 'none' : hash === '#api' ? 'none' : 'block';
+    hash === '#lista' ? 'block' : 'none';
   document.getElementById('view-about').style.display =
     hash === '#o-aplikacji' ? 'block' : 'none';
   document.getElementById('view-api').style.display =
     hash === '#api' ? 'block' : 'none';
 
-  if (hash === '#api') {
-    renderApiData();
-  }
+  if (hash === '#api') renderApiData();
 }
 
-/* ===== RENDER API DATA ===== */
+/* ===== API DATA ===== */
 async function renderApiData() {
-  apiDataList.innerHTML = '<li>Ładowanie danych z API...</li>';
+  apiDataList.innerHTML = '<li>Ładowanie danych...</li>';
 
   try {
-    // 1) Random Useless Fact JSON
-    const respUseless = await fetch(FACT_USELESS_API);
-    const uselessJson = await respUseless.json();
+    let uselessJson;
+    let triviaJson;
 
-    // 2) Random Trivia Question JSON
-    const respTrivia = await fetch(TRIVIA_API);
-    const triviaJson = await respTrivia.json();
+    if (USE_MOCK_API) {
+      uselessJson = await mockUselessFactAPI();
+      triviaJson = await mockTriviaAPI();
+    } else {
+      const r1 = await fetch(FACT_USELESS_API);
+      uselessJson = await r1.json();
+
+      const r2 = await fetch(TRIVIA_API);
+      triviaJson = await r2.json();
+    }
 
     apiDataList.innerHTML = '';
 
-    // Useless Fact
     const li1 = document.createElement('li');
     li1.textContent = `Fakt: ${uselessJson.text}`;
     apiDataList.appendChild(li1);
 
-    // Trivia Question
-    if (triviaJson.results && triviaJson.results.length > 0) {
-      const t = triviaJson.results[0];
-      const li2 = document.createElement('li');
-      // Wyświetlamy pytanie i odpowiedź
-      li2.innerHTML = `Quiz: ${t.question} <br> Answer: ${t.correct_answer}`;
-      apiDataList.appendChild(li2);
-    }
+    const t = triviaJson.results[0];
+    const li2 = document.createElement('li');
+    li2.innerHTML = `Quiz: ${t.question}<br>Odpowiedź: ${t.correct_answer}`;
+    apiDataList.appendChild(li2);
 
-  } catch (error) {
-    apiDataList.innerHTML = '<li>Błąd podczas pobierania danych z API.</li>';
-    console.error('Błąd API:', error);
+  } catch {
+    apiDataList.innerHTML = '<li>Błąd API</li>';
   }
 }
+
+/* ===== PRZEŁĄCZNIK TRYBU API ===== */
+toggleApiModeBtn.addEventListener('click', () => {
+  USE_MOCK_API = !USE_MOCK_API;
+  toggleApiModeBtn.textContent =
+    `Tryb API: ${USE_MOCK_API ? 'MOCK' : 'PRAWDZIWE'}`;
+  renderApiData();
+});
 
 /* ===== INIT ===== */
 addItemBtn.addEventListener('click', addItem);
